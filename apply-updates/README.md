@@ -50,7 +50,7 @@ This pipeline can also prevent pipeline collision so that you can schedule when 
 
 #### <a name="change-time-of-scheduler"> Changing the time of the pipeline's scheduler
 
-To change the time window for the `schedule` resource in the pipeline, either manually change its time parameters by following [time resource documentation](https://github.com/concourse/time-resource) or use [`yaml-patch`](https://github.com/krishicks/yaml-patch) to do it in an automated fashion (recommended).
+To change the time window for the `schedule` resource in the pipeline, either manually change its time parameters by following [time resource documentation](https://github.com/concourse/time-resource) or use [`yaml-patch`](https://github.com/pivotal-cf/yaml-patch) to do it in an automated fashion (recommended).
 
 To use `yaml-patch`, update a local copy of the sample operation file
  [change-schedule.yml](https://github.com/pivotal-cf/pcf-pipelines/blob/master/operations/change-schedule.yml) with the desired time/location/interval and then apply it to the pipeline with the following command:
@@ -107,3 +107,9 @@ cat pipeline.yml | yaml-patch -o remove-upload-stemcell-job.yml > new-pipeline.y
 ![Apply Updates pipeline](embed-apply-changes-only.png)
 
 ---
+
+## Known Issues
+
+Use this pipeline with caution, as it is still a relatively new and untested pipeline. Known issues, which can be mitigated by applying yaml-patches as described above, include:
+- In the event that there is not an updated stemcell available, the `upload-stemcell` job will state "No new stemcells available, skipping upload." and exit successfully - however, the apply-updates will still run which may not be desirable. 
+- before running this pipeline, make sure to check the default configuration to ensure it is not scheduled to run once per day, every day, whether there are updates or not.

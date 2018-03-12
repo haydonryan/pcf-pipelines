@@ -173,8 +173,8 @@ echo "Configuring IaaS..."
 om-linux \
   --target https://$OPSMAN_URI \
   --skip-ssl-validation \
-  --username $OPSMAN_USERNAME \
-  --password $OPSMAN_PASSWORD \
+  --username "$OPSMAN_USERNAME" \
+  --password "$OPSMAN_PASSWORD" \
   curl \
   -x PUT \
   -d "$iaas_configuration" \
@@ -185,8 +185,8 @@ echo "Configuring Ops Manager Director..."
 om-linux \
   --target https://$OPSMAN_URI \
   --skip-ssl-validation \
-  --username $OPSMAN_USERNAME \
-  --password $OPSMAN_PASSWORD \
+  --username "$OPSMAN_USERNAME" \
+  --password "$OPSMAN_PASSWORD" \
   configure-bosh \
   --director-configuration "$director_configuration" \
   --az-configuration "$az_configuration" \

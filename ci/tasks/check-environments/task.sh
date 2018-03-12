@@ -32,7 +32,7 @@ function main() {
   for iteration in $(seq ${TIMEOUT_MINUTES}); do
     local JOB_JSON=$(curl_api ${concourse_token} /api/v1/teams/${ATC_TEAM_NAME}/pipelines/${PIPELINE}/jobs/${JOB})
     local CURRENT_BUILD_STATUS=$(echo ${JOB_JSON} | jq -r .next_build.status)
-    if [ "${CURRENT_BUILD_STATUS}" != "null" ];
+    if [ "${CURRENT_BUILD_STATUS}" != "null" ]; then
       dot_and_sleep
       continue
     fi
@@ -51,8 +51,14 @@ function main() {
     jq -r '.inputs[] | select(.name=="pcf-pipelines-tarball").metadata[] | select(.name=="version" ).value')
     echo "${PIPELINE}/${JOB}@${RC_VERSION} ${JOB_STATUS}"
 
-    if [[ "${JOB_STATUS}" == "succeeded" && "${RC_VERSION}" == "${EXPECTED_RC_VERSION}" ]]; then
-      exit 0
+    if [[ "${JOB_STATUS}" == "succeeded" ]]; then
+      if [[ "${DISABLE_PIVNET_VERSION_CHECK}" == "true" ]]; then
+        exit 0
+      fi
+
+      if [[ "${RC_VERSION}" == "${EXPECTED_RC_VERSION}" ]]; then
+        exit 0
+      fi
     fi
 
     exit 1

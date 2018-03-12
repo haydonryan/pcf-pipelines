@@ -46,13 +46,14 @@ jobs:
       GOVC_URL: {{vcenter_host}}
       GOVC_USERNAME: {{vcenter_usr}}
       GOVC_PASSWORD: {{vcenter_pwd}}
-      GOVC_DATACENTER: {{vcenter_data_center}}
-      GOVC_DATASTORE: {{om_data_store}}
+      GOVC_DATACENTER: {{vcenter_datacenter}}
+      GOVC_DATASTORE: {{vcenter_datastore}}
       GOVC_NETWORK: {{om_vm_network}}
       GOVC_RESOURCE_POOL: {{om_resource_pool}}
       GOVC_HOST: {{om_vm_host}}
       OPSMAN_DOMAIN_OR_IP_ADDRESS: {{opsman_domain_or_ip_address}}
-      OPS_MGR_SSH_PWD: {{om_ssh_pwd}}
+      OM_VM_FOLDER: {{om_vm_folder}}
+      OPS_MGR_SSH_PWD: {{opsman_ssh_password}}
       OM_NTP_SERVERS: {{om_ntp_servers}}
       OM_DNS_SERVERS: {{om_dns_servers}}
       OM_GATEWAY: {{om_gateway}}
@@ -90,7 +91,7 @@ jobs:
       VCENTER_HOST: {{vcenter_host}}
       VCENTER_USR: {{vcenter_usr}}
       VCENTER_PWD: {{vcenter_pwd}}
-      VCENTER_DATA_CENTER: {{vcenter_data_center}}
+      VCENTER_DATA_CENTER: {{vcenter_datacenter}}
       VCENTER_DISK_TYPE: {{vm_disk_type}}
       EPHEMERAL_STORAGE_NAMES: {{ephemeral_storage_names}}
       PERSISTENT_STORAGE_NAMES: {{persistent_storage_names}}
@@ -113,7 +114,6 @@ jobs:
       DEPLOYMENT_NW_GATEWAY: {{deployment_nw_gateway}}
       DEPLOYMENT_NW_AZS: {{deployment_nw_azs}}
       SERVICES_NETWORK_NAME: {{services_network_name}}
-      IS_SERVICE_NETWORK: {{is_service_network}}
       SERVICES_VCENTER_NETWORK: {{services_vsphere_network}}
       SERVICES_NW_CIDR: {{services_nw_cidr}}
       SERVICES_EXCLUDED_RANGE: {{services_excluded_range}}
@@ -160,6 +160,8 @@ jobs:
     file: pcf-pipelines/tasks/apply-changes/task.yml
     params:
       OPSMAN_DOMAIN_OR_IP_ADDRESS: {{opsman_domain_or_ip_address}}
+      OPSMAN_CLIENT_ID: ""
+      OPSMAN_CLIENT_SECRET: ""
       OPSMAN_USERNAME: {{opsman_admin_username}}
       OPSMAN_PASSWORD: {{opsman_admin_password}}
 
@@ -182,6 +184,8 @@ jobs:
       OPSMAN_DOMAIN_OR_IP_ADDRESS: {{opsman_domain_or_ip_address}}
       OPS_MGR_USR: {{opsman_admin_username}}
       OPS_MGR_PWD: {{opsman_admin_password}}
+      OPSMAN_CLIENT_ID: ""
+      OPSMAN_CLIENT_SECRET: ""
       PIVNET_API_TOKEN: {{pivnet_token}}
       NO_PROXY: {{company_proxy_domain}}
       OM_IP: {{om_ip}}
@@ -205,6 +209,9 @@ jobs:
       OPSMAN_DOMAIN_OR_IP_ADDRESS: {{opsman_domain_or_ip_address}}
       OPSMAN_USERNAME: {{opsman_admin_username}}
       OPSMAN_PASSWORD: {{opsman_admin_password}}
+      OPSMAN_CLIENT_ID: ""
+      OPSMAN_CLIENT_SECRET: ""
+
 
 - name: deploy-ert
   plan:
@@ -237,8 +244,15 @@ jobs:
       COMPANY_NAME: {{company_name}}
       AUTHENTICATION_MODE: {{authentication_mode}}
       LOGGREGATOR_ENDPOINT_PORT: {{loggregator_endpoint_port}}
-      SSL_CERT: {{ssl_cert}}
-      SSL_PRIVATE_KEY: {{ssl_private_key}}
+      POE_SSL_NAME1: {{poe_ssl_name1}}
+      POE_SSL_CERT1: {{poe_ssl_cert1}}
+      POE_SSL_KEY1: {{poe_ssl_key1}}
+      POE_SSL_NAME2: {{poe_ssl_name2}}
+      POE_SSL_CERT2: {{poe_ssl_cert2}}
+      POE_SSL_KEY2: {{poe_ssl_key2}}
+      POE_SSL_NAME3: {{poe_ssl_name3}}
+      POE_SSL_CERT3: {{poe_ssl_cert3}}
+      POE_SSL_KEY3: {{poe_ssl_key3}}
       SAML_SSL_CERT: {{saml_ssl_cert}}
       SAML_SSL_PRIVATE_KEY: {{saml_ssl_private_key}}
       HAPROXY_FORWARD_TLS: {{haproxy_forward_tls}}
@@ -255,6 +269,7 @@ jobs:
       SMTP_PORT: {{smtp_port}}
       SMTP_USER: {{smtp_user}}
       SMTP_PWD: {{smtp_pwd}}
+      SMTP_ENABLE_STARTTLS_AUTO: {{smtp_enable_starttls_auto}}
       SMTP_AUTH_MECHANISM: {{smtp_auth_mechanism}}
       LDAP_URL: {{ldap_url}}
       LDAP_USER: {{ldap_user}}
@@ -295,6 +310,7 @@ jobs:
       ALLOW_APP_SSH_ACCESS: {{allow_app_ssh_access}}
       TCP_ROUTER_STATIC_IPS: {{tcp_router_static_ips}}
       SSH_STATIC_IPS: {{ssh_static_ips}}
+      MYSQL_STATIC_IPS: {{mysql_static_ips}}
       CONSUL_SERVER_INSTANCES: {{consul_server_instances}}
       NATS_INSTANCES: {{nats_instances}}
       NFS_SERVER_INSTANCES: {{nfs_server_instances}}
@@ -312,9 +328,11 @@ jobs:
       DIEGO_BRAIN_INSTANCES: {{diego_brain_instances}}
       DIEGO_CELL_INSTANCES: {{diego_cell_instances}}
       DOPPLER_INSTANCES: {{doppler_instances}}
-      LOGGREGATOR_TC_INSTANCES: {{loggregator_traffic_controller_instances}}
+      LOGGREGATOR_TRAFFICCONTROLLER_INSTANCES: {{loggregator_trafficcontroller_instances}}
       TCP_ROUTER_INSTANCES: {{tcp_router_instances}}
       SYSLOG_ADAPTER_INSTANCES: {{syslog_adapter_instances}}
+      SYSLOG_SCHEDULER_INSTANCES: {{syslog_scheduler_instances}}
+      CREDHUB_INSTANCES: {{credhub_instances}}
       INTERNET_CONNECTED: {{internet_connected}}
       CONTAINER_NETWORKING_NW_CIDR: {{container_networking_nw_cidr}}
       TCP_ROUTER_NSX_SECURITY_GROUP: {{tcp_router_nsx_security_group}}
@@ -332,8 +350,24 @@ jobs:
       DIEGO_BRAIN_NSX_LB_POOL_NAME: {{diego_brain_nsx_lb_pool_name}}
       DIEGO_BRAIN_NSX_LB_SECURITY_GROUP: {{diego_brain_nsx_lb_security_group}}
       DIEGO_BRAIN_NSX_LB_PORT: {{diego_brain_nsx_lb_port}}
+      MYSQL_NSX_SECURITY_GROUP: {{mysql_nsx_security_group}}
+      MYSQL_NSX_LB_EDGE_NAME: {{mysql_nsx_lb_edge_name}}
+      MYSQL_NSX_LB_POOL_NAME: {{mysql_nsx_lb_pool_name}}
+      MYSQL_NSX_LB_SECURITY_GROUP: {{mysql_nsx_lb_security_group}}
+      MYSQL_NSX_LB_PORT: {{mysql_nsx_lb_port}}
+      ROUTING_TLS_TERMINATION: {{routing_tls_termination}}
+      ROUTING_CUSTOM_CA_CERTIFICATES: {{routing_custom_ca_certificates}}
+      CREDUB_ENCRYPTION_KEY_NAME1: {{credhub_encryption_key_name1}}
+      CREDUB_ENCRYPTION_KEY_SECRET1: {{credhub_encryption_key_secret1}}
+      CREDUB_ENCRYPTION_KEY_NAME2: {{credhub_encryption_key_name2}}
+      CREDUB_ENCRYPTION_KEY_SECRET2: {{credhub_encryption_key_secret2}}
+      CREDUB_ENCRYPTION_KEY_NAME3: {{credhub_encryption_key_name3}}
+      CREDUB_ENCRYPTION_KEY_SECRET3: {{credhub_encryption_key_secret3}}
+      CREDHUB_PRIMARY_ENCRYPTION_NAME: {{credhub_primary_encryption_name}}
       HA_PROXY_LB_NAME: ""
       HAPROXY_FLOATING_IPS: ""
+      OPSMAN_CLIENT_ID: ""
+      OPSMAN_CLIENT_SECRET: ""
 
   - task: disable-errands
     file: pcf-pipelines/tasks/disable-errands/task.yml
@@ -343,6 +377,8 @@ jobs:
       OPSMAN_USERNAME: {{opsman_admin_username}}
       OPSMAN_PASSWORD: {{opsman_admin_password}}
       ERRANDS_TO_DISABLE: {{ert_errands_to_disable}}
+      OPSMAN_CLIENT_ID: ""
+      OPSMAN_CLIENT_SECRET: ""
 
   - task: deploy
     file: pcf-pipelines/tasks/apply-changes/task.yml
@@ -350,6 +386,9 @@ jobs:
       OPSMAN_DOMAIN_OR_IP_ADDRESS: {{opsman_domain_or_ip_address}}
       OPSMAN_USERNAME: {{opsman_admin_username}}
       OPSMAN_PASSWORD: {{opsman_admin_password}}
+      OPSMAN_CLIENT_ID: ""
+      OPSMAN_CLIENT_SECRET: ""
+
 
 - name: wipe-env
   plan:
@@ -367,8 +406,8 @@ jobs:
       GOVC_URL: {{vcenter_host}}
       GOVC_USERNAME: {{vcenter_usr}}
       GOVC_PASSWORD: {{vcenter_pwd}}
-      GOVC_DATACENTER: {{vcenter_data_center}}
-      GOVC_DATASTORE: {{om_data_store}}
+      GOVC_DATACENTER: {{vcenter_datacenter}}
+      GOVC_DATASTORE: {{vcenter_datastore}}
       GOVC_NETWORK: {{om_vm_network}}
       GOVC_RESOURCE_POOL: {{om_resource_pool}}
       GOVC_HOST: {{om_vm_host}}

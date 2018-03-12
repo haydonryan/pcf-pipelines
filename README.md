@@ -2,7 +2,7 @@
 
 **Please use the [Pivotal Network release](https://network.pivotal.io/products/pcf-automation/) of `pcf-pipelines` for stability. Using this repo directly may result in breaking the pipelines that consume it. Tracking master is considered unstable.**
 
-This is a collection of [Concourse](https://concourse.ci) pipelines for
+This is a collection of [Concourse](https://concourse-ci.org) pipelines for
 installing and upgrading [Pivotal Cloud Foundry](https://pivotal.io/platform).
 
 Other pipelines which may be of interest are listed at the end of this README.
@@ -21,11 +21,19 @@ These pipelines are found in the `install-pcf` directory, sorted by IaaS.
 
 | IAAS | pipelines release | OM version | ERT version |
 | :--- | --- | --- | --- |
-| vSphere | v0.19.2 | 1.12.x  | 1.12.x  |
-| Azure | v0.19.2 | 1.12.x | 1.12.x |
-| AWS | v0.19.2 | 1.12.x | 1.12.x |
-| GCP | v0.19.2 | 1.12.x  | 1.12.x  |
-| OpenStack | v0.19.2 | 1.12.x  | 1.12.x  |
+| vSphere | v23 | 2.0.x  | 2.0.x  |
+| Azure | v23 | 2.0.x | 2.0.x |
+| AWS | v23 | 2.0.x | 2.0.x |
+| GCP | v23 | 2.0.x  | 2.0.x  |
+| OpenStack | v23 | 2.0.x  | 2.0.x  |
+
+| IAAS | pipelines release | OM version | ERT version |
+| :--- | --- | --- | --- |
+| vSphere | v22 | 1.12.x  | 1.12.x  |
+| Azure | v22 | 1.12.x | 1.12.x |
+| AWS | v22 | 1.12.x | 1.12.x |
+| GCP | v22 | 1.12.x  | 1.12.x  |
+| OpenStack | v22 | 1.12.x  | 1.12.x  |
 
 
 | IAAS | pipelines release | OM version | ERT version |
@@ -44,10 +52,12 @@ These upgrade pipelines are intended to be kept running for as long as the found
 
 These pipelines are found in any of the directories with the `upgrade-` prefix.
 
+The upgrade-tile pipeline is compatible with the latest version of pcf-pipelines. However, as discussed, this pipeline is only used for patch upgrades. 
+
 ## Prerequisites
 
-- [install a Concourse server](https://concourse.ci/installing.html)
-- download the [Fly CLI](https://concourse.ci/fly-cli.html) to interact with the Concourse server
+- [install a Concourse server](https://concourse-ci.org/installing.html)
+- download the [Fly CLI](https://concourse-ci.org/fly-cli.html) to interact with the Concourse server
 - depending on where you've installed Concourse, you may need to set up
 [additional firewall rules](FIREWALL.md "Firewall") to allow Concourse to reach
 third-party sources of pipeline dependencies
@@ -78,7 +88,7 @@ third-party sources of pipeline dependencies
 ## Customizing the pipelines
 
 It's possible to customize `pcf-pipelines` to suit your particular needs using
-[`yaml-patch`](https://github.com/krishicks/yaml-patch).
+[`yaml-patch`](https://github.com/pivotal-cf/yaml-patch).
 
 
 This tool supports all operations from [RFC-6902](https://tools.ietf.org/html/rfc6902) (for YAML documents instead of JSON). which can be applied to a source YAML file, such as `pcf-pipelines` pipeline definition files. It allows for a repeatable and automated mechanism to apply the same local customization operations to one or more pipeline YAML files for every new release of `pcf-pipelines` that gets delivered.
@@ -134,54 +144,19 @@ There is an experimental tool which you may find helpful for deploying and manag
 
 Our goal is to at least support the latest version of PCF with these pipelines. Currently there is no assurance of backwards compatibility, however we do keep past releases of the pipelines to ensure there is at least one version of the pipelines that would work with an older version of PCF.
 
-Compatbility is generally only an issue whenever Pivotal releases a new version of PCF software that requires additional configuration in Ops Manager. These new required fields then need to be either manually configured outside the pipeline, or supplied via a new configuration added to the pipeline itself.
+Compatibility is generally only an issue whenever Pivotal releases a new version of PCF software that requires additional configuration in Ops Manager. These new required fields then need to be either manually configured outside the pipeline, or supplied via a new configuration added to the pipeline itself.
 
 ## Pipelines for Airgapped Environments
 
-The pipelines cannot be used as-is in environments that have no outbound access to the Internet as the pipelines expect to be able to pull resources from the Internet, including from Pivotal Network and Dockerhub. Various aspects of the pipelines need to be modified to be suitable for use in airgapped environments.
+By default, the pipelines require outbound access to the Internet to pull resources such as releases from Pivotal Network and images from DockerHub. Various aspects of the pipelines need to be modified for them to work on an airgapped environment.
 
-### Resources
+To help with the modification and adaptation of the pipelines for such environments, two sample transformation/bootstraping pipelines are provided in this repository:
 
-All resources must be provided from within the airgapped environment. The pipelines and their tasks don't care _where_ the resources come from, just that they contain the same bits that they would have gotten from the original resource. For resources that come from Pivnet this means including the metadata.json file that pivnet-resource normally downloads as some tasks use that file to determine dependencies of the resource, such as what stemcell a tile requires.
+- [`create-offline-pinned-pipelines`](https://github.com/pivotal-cf/pcf-pipelines/tree/master/create-offline-pinned-pipelines): adapts `pcf-pipelines` to run on airgapped environments and downloads required resources into a S3 repository.
+- [`unpack-pcf-pipelines-combined`](https://github.com/pivotal-cf/pcf-pipelines/tree/master/unpack-pcf-pipelines-combined): bootstraps an airgapped S3 repository with the produced offline pipelines and resources from `create-offline-pinned-pipelines`.
 
-### Tasks
+For more details on these pipelines, along with usage instructions, refer to the *[Offline Pipelines for Airgapped Environments](https://github.com/pivotal-cf/pcf-pipelines/blob/master/docs/offline-pipelines.md)* documentation page.
 
-In rare cases a task will attempt to reach the Internet. An example of this is the Install PCF pipelines that reach out to Pivnet to get the appropriate stemcell for the PCF Elastic Runtime version that was pulled by Concourse. Any such task needs to be modified/replaced to support pulling those artifacts from within the airgapped environment.
-
-Additionally, tasks also define an `image_resource` for the source of the rootfs Concourse will use when executing the task. This rootfs typically is specified as a `docker-image` resource residing in Dockerhub. This `image_resource` resource must also be supplied from within the airgapped environment.
-
-### Implementation
-
-Given Concourse ships with the [s3-resource](https://github.com/concourse/s3-resource), and there are many S3-compatible blobstores that can be used from within airgapped environments such as [Minio](https://minio.io/) and [Dell EMC Elastic Cloud Storage](https://www.dellemc.com/en-us/storage/ecs/index.htm), our chosen implementation is to use S3 for supplying all of the required resources.
-
-We've created two pipelines, `create-offline-pinned-pipelines` and `unpack-pcf-pipelines-combined`, that are meant to be used to facilitate physical transfer of artifacts to the airgapped environment.
-
-`create-offline-pinned-pipelines` is used to:
-
-* Pull all required resources from their normal locations on the Internet
-* Create a tarball for each resource containing the entire contents of the resource
-* Flatten the tasks for the pipelines into the pipeline definitions
-* Replace all of the `resource` and `image_resource` definitions with resources of type `s3`
-* Hardcode the `get` of all resources and the `image_resource` definitions to the specific version of each resource that was downloaded
-* Create a GPG-encrypted tarball with each resource tarball created above and a `shasum` manifest of each resource tarball
-* Put the tarball to a location within S3 storage that can be downloaded manually and put on physical media for transfer to the airgapped environment
-
-`unpack-pcf-pipelines-combined` is used to:
-
-* Download, decrypt, and extract the GPG-encrypted tarball into its components after it has been manually copied to the `pcf-pipelines-combined/` path in S3
-* Verify the `shasum` manifest of the tarball contents
-* Put the tarball parts into their appropriate locations within the airgapped S3 storage for use by the pipelines
-
-From this point the `pcf-pipelines` folder in the configured S3 bucket in the airgapped environment contains the pcf-pipelines tarball that can then be used to set a pipeline within.
-
-### Requirements
-
-* The online environment must have access to Dockerhub and Pivnet
-* Concourse 3.3.3+ in both online and airgapped environments
-
-#### Bootstrapping
-
-For the `unpack-pcf-pipelines-combined` to work there must be a single manual transfer of the czero-cflinuxfs2 tarball to the czero-cflinuxfs2 folder within the airgapped environment's S3 storage. Only after that is done can the `unpack-pcf-pipelines-combined` pipeline be set and unpaused.
 
 ## Contributing
 
@@ -214,7 +189,7 @@ that the pipeline requires. This template should have placeholder values,
 typically CHANGEME, or defaults where appropriate. This file should be filled
 out and stored elsewhere, such as in LastPass, and then supplied to `fly` via
 the `-l` flag. See the
-[fly documentation](http://concourse.ci/fly-set-pipeline.html) for more.
+[fly documentation](http://concourse-ci.org/fly-set-pipeline.html) for more.
 
 #### Pipelines
 

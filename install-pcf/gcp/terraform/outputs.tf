@@ -23,11 +23,11 @@ output "ops_manager_dns" {
 }
 
 output "sys_domain" {
-  value = "sys.${var.pcf_ert_domain}"
+  value = "${var.system_domain}"
 }
 
 output "apps_domain" {
-  value = "cfapps.${var.pcf_ert_domain}"
+  value = "${var.apps_domain}"
 }
 
 output "tcp_domain" {
@@ -146,4 +146,12 @@ output "pub_ip_opsman" {
 
 output "sql_instance_ip" {
   value = "${google_sql_database_instance.master.ip_address.0.ip_address}"
+}
+
+output "ert_certificate" {
+  value = "${google_compute_ssl_certificate.ssl-cert.certificate}"
+}
+
+output "ert_certificate_key" {
+  value = "${google_compute_ssl_certificate.ssl-cert.private_key}"
 }

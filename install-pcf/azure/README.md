@@ -8,7 +8,7 @@ architecture](http://docs.pivotal.io/pivotalcf/1-10/refarch/azure/azure_ref_arch
 
 ## Usage
 
-This pipeline downloads artifacts from DockerHub (czero/cflinuxfs2 and custom
+This pipeline downloads artifacts from DockerHub (czero/rootfs and custom
 docker-image resources) and the configured Azure Storage Container
 (terraform.tfstate file), and as such the Concourse instance must have access
 to those. Note that Terraform outputs a .tfstate file that contains plaintext
@@ -63,10 +63,10 @@ the `Contributor` Role on the target Azure Project.
 4. Update `pcf-pipelines/install-pcf/azure/params.yml` and replace all variables/parameters.
 
     - The sample pipeline params file includes 2 params that set the major/minor versions of
-      OpsMan and ERT that will be pulled.  They will typically default to the latest RC/GA available tiles.
+      OpsMan and ERT that will be pulled.  They will typically default to the latest available tiles.
       ```
-      opsman_major_minor_version: '1\.11\..*'
-      ert_major_minor_version: '1\.11\..*'
+      opsman_major_minor_version: 2\.[0-9\]+\.[0-9]+$
+      ert_major_minor_version: 2\.[0-9\]+\.[0-9]+$ 
       ```
 
 5. Log into concourse and create the pipeline.
@@ -118,3 +118,15 @@ is resolvable, run the following:
 
 
   **Solution:** You are not using the PivNet resource, and are most likely using a different repository manager like Artifactory. For more information, and a possible workaround, see this github [issue](https://github.com/pivotal-cf/pcf-pipelines/issues/192). 
+
+
+## Known Issues
+
+- The multi resource group functionality is still WIP. Please see this github [issue](https://github.com/pivotal-cf/pcf-pipelines/issues/184) for more details. 
+
+- Terraform introduced a [bug](https://github.com/terraform-providers/terraform-provider-azurerm/pull/772) recently in the `DNSSettings` property. We've pushed out a [fix](https://www.pivotaltracker.com/story/show/154810872) but we’ve yet to release a rc. If you are using v23, you should lock the provider version to `1.0.0`
+
+- If you are using pcf-pipelines v23 or older, Terraform [hardcodes](https://github.com/pivotal-cf/pcf-pipelines/blob/v0.23.0/install-pcf/azure/terraform/c0-azure-base/dns.tf#L19) the apps domain name to `cfapps`. The workaround for this is by adding `*.apps` to your Azure DNS Zone.
+
+- If you are using pcf-pipelines v17 (PCF 1.11), and you are using TCP and Spring Cloud Services with keepalives enabled, if your ALBs are not set with a timeout of 30 minutes, you could run into a situation whereby the ALB will close the idle connection prematurely. If you are on PCF 1.12 or later, the workaround for this is to go into ERT/PAS ---> Networking and set the Frontend Idle Timeout for GoRouter and HAProxy to a sensible [number](https://docs.pivotal.io/pivotalcf/2-0/customizing/azure-er-config.html#networking). 
+

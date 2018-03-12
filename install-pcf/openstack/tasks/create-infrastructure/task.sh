@@ -5,13 +5,15 @@ set -eu
 ROOT=$PWD
 
 function get_opsman_version() {
-  cut -d\# -f 1 pivnet-opsmgr/version
+  cut -d\# -f 1 ops-manager/version
 }
 
 function main() {
   local opsman_image_name="ops-manager-$(get_opsman_version)"
   local opsman_fixed_ip=$(echo $INFRA_SUBNET_CIDR|cut -d. -f 1,2,3).5
   echo "Opsman Image: ${opsman_image_name}"
+
+  terraform init "$ROOT/pcf-pipelines/install-pcf/openstack/terraform"
 
   terraform plan \
     -var "os_tenant_name=${OS_PROJECT_NAME}" \

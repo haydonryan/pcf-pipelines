@@ -4,11 +4,11 @@
 
 This pipeline uses Terraform to create all the infrastructure required to run a
 3 AZ PCF deployment on GCP per the Customer[0] [reference
-architecture](http://docs.pivotal.io/pivotalcf/1-10/refarch/gcp/gcp_ref_arch.html).
+architecture](http://docs.pivotal.io/pivotalcf/refarch/gcp/gcp_ref_arch.html).
 
 ## Usage
 
-This pipeline downloads artifacts from DockerHub (czero/cflinuxfs2 and custom
+This pipeline downloads artifacts from DockerHub (czero/rootfs and custom
 docker-image resources) and the configured Google Cloud Storage bucket
 (terraform.tfstate file), and as such the Concourse instance must have access
 to those. Note that Terraform outputs a .tfstate file that contains plaintext
@@ -26,7 +26,7 @@ secrets.
   * the `gsutil` CLI: `gcloud auth activate-service-account --key-file credentials.json && gsutil versioning set on gs://<your-bucket>`
   * If you already have a service account and sufficient permissions, you can run `gcloud auth login` and `gsutil versioning set on gs://<your-bucket>`
 
-3. Change all of the CHANGEME values in params.yml with real values. For the gcp_service_account_key, create a new service account key that has the following IAM roles:
+3. Change all of the CHANGEME values in params.yml with real values. For the gcp_service_account_key, create a new service account key that has the following IAM roles. (See the Troubleshooting issue below to ensure you have indented this parameter correctly):
   * Cloud SQL Admin
   * Compute Instance Admin (v1)
   * Compute Network Admin
@@ -34,7 +34,7 @@ secrets.
   * DNS Administrator
   * Storage Admin
 
-4. [Set the pipeline](http://concourse.ci/single-page.html#fly-set-pipeline), using your updated params.yml:
+4. [Set the pipeline](http://concourse-ci.org/single-page.html#fly-set-pipeline), using your updated params.yml:
   ```
   fly -t lite set-pipeline -p deploy-pcf -c pipeline.yml -l params.yml
   ```
@@ -131,3 +131,29 @@ address this issue.
 
 
   **Solution:** You are not using the PivNet resource, and are most likely using a different repository manager like Artifactory. For more information, and a possible workaround, see this github [issue](https://github.com/pivotal-cf/pcf-pipelines/issues/192). 
+
+
+#### Error message: ####
+
+    Error
+    initializing
+    running pcf-pipelines/install-pcf/gcp/tasks/create-initial-terraform-state/task.sh
+     ERROR: (gcloud.auth.activate-service-account) Missing required argument [ACCOUNT]: An account is required when using .p12 keys
+
+
+  **Solution:** Ensure the `gcp_service_account_key` parameter is indented correctly. For example:
+  ```  
+  gcp_service_account_key: |
+    {
+      "type": "service_account",
+      "project_id": "cf-example",
+      "private_key_id": "REDACTED",
+      "private_key": "-----BEGIN PRIVATE KEY-----...example...-----END PRIVATE KEY-----\n",
+      "client_email": "customer0-example.iam.gserviceaccount.com",
+      "client_id": "REDACTED",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/customer0-example.iam.gserviceaccount.com"
+    }
+  ```

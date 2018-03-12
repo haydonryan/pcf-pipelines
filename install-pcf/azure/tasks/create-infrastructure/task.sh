@@ -7,7 +7,7 @@ if [[ ! ${AZURE_PCF_TERRAFORM_TEMPLATE} == "c0-azure-base" ]]; then
 fi
 
 # Get ert subnet if multi-resgroup
-az login --service-principal -u ${AZURE_SERVICE_PRINCIPAL_ID} -p ${AZURE_SERVICE_PRINCIPAL_PASSWORD} --tenant ${AZURE_TENANT_ID}
+az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
 az account set --subscription ${AZURE_SUBSCRIPTION_ID}
 ERT_SUBNET_CMD="az network vnet subnet list -g network-core --vnet-name vnet-pcf --output json | jq '.[] | select(.name == \"ert\") | .id' | tr -d '\"'"
 ERT_SUBNET=$(eval ${ERT_SUBNET_CMD})
@@ -46,10 +46,12 @@ echo "==========================================================================
 echo "Executing Terraform Plan ..."
 echo "=============================================================================================="
 
+terraform init "pcf-pipelines/install-pcf/azure/terraform/${AZURE_PCF_TERRAFORM_TEMPLATE}"
+
 terraform plan \
   -var "subscription_id=${AZURE_SUBSCRIPTION_ID}" \
-  -var "client_id=${AZURE_SERVICE_PRINCIPAL_ID}" \
-  -var "client_secret=${AZURE_SERVICE_PRINCIPAL_PASSWORD}" \
+  -var "client_id=${AZURE_CLIENT_ID}" \
+  -var "client_secret=${AZURE_CLIENT_SECRET}" \
   -var "tenant_id=${AZURE_TENANT_ID}" \
   -var "location=${AZURE_REGION}" \
   -var "env_name=${AZURE_TERRAFORM_PREFIX}" \
@@ -61,13 +63,14 @@ terraform plan \
   -var "azure_terraform_subnet_dynamic_services_cidr=${AZURE_TERRAFORM_SUBNET_DYNAMIC_SERVICES_CIDR}" \
   -var "ert_subnet_id=${ERT_SUBNET}" \
   -var "pcf_ert_domain=${PCF_ERT_DOMAIN}" \
+  -var "system_domain=${SYSTEM_DOMAIN}" \
+  -var "apps_domain=${APPS_DOMAIN}" \
   -var "ops_manager_image_uri=${PCF_OPSMAN_IMAGE_URI}" \
   -var "vm_admin_username=${AZURE_VM_ADMIN}" \
-  -var "vm_admin_password=${AZURE_VM_PASSWORD}" \
   -var "vm_admin_public_key=${PCF_SSH_KEY_PUB}" \
   -var "azure_multi_resgroup_network=${AZURE_MULTI_RESGROUP_NETWORK}" \
   -var "azure_multi_resgroup_pcf=${AZURE_MULTI_RESGROUP_PCF}" \
-  -var "priv_ip_opsman_vm=${AZURE_TERRAFORM_OPSMAN_PRIV_IP}" \
+  -var "azure_opsman_priv_ip=${AZURE_TERRAFORM_OPSMAN_PRIV_IP}" \
   -var "azure_account_name=${AZURE_ACCOUNT_NAME}" \
   -var "azure_buildpacks_container=${AZURE_BUILDPACKS_CONTAINER}" \
   -var "azure_droplets_container=${AZURE_DROPLETS_CONTAINER}" \

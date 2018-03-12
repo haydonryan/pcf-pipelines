@@ -3,6 +3,11 @@ resource "google_compute_instance_group" "ert-http-lb" {
   name        = "${var.prefix}-http-lb"
   description = "terraform generated pcf instance group that is multi-zone for http/https load balancing"
   zone        = "${element(list(var.gcp_zone_1,var.gcp_zone_2,var.gcp_zone_3), count.index)}"
+
+  named_port {
+    name = "http"
+    port = 80
+  }
 }
 
 resource "google_compute_backend_service" "ert_http_lb_backend_service" {
@@ -46,16 +51,19 @@ resource "google_compute_target_https_proxy" "https_lb_proxy" {
 }
 
 resource "google_compute_ssl_certificate" "ssl-cert" {
-  name        = "${var.prefix}-lb-cert"
+  name_prefix = "${var.prefix}-lb-cert-"
   description = "user provided ssl private key / ssl certificate pair"
   certificate = "${var.pcf_ert_ssl_cert}"
   private_key = "${var.pcf_ert_ssl_key}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "google_compute_http_health_check" "cf" {
   name = "${var.prefix}-cf-public"
 
-  //  host                = "api.sys.${google_dns_managed_zone.env_dns_zone.dns_name}"
   port                = 8080
   request_path        = "/health"
   check_interval_sec  = 5

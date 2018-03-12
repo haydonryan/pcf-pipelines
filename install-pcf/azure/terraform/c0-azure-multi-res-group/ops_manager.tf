@@ -12,7 +12,7 @@ resource "azurerm_network_interface" "ops_manager_nic" {
     name                          = "${var.env_name}-ops-manager-ip-config"
     subnet_id                     = "${var.subnet_infra_id}"
     private_ip_address_allocation = "static"
-    private_ip_address            = "${var.priv_ip_opsman_vm}"
+    private_ip_address            = "${var.azure_opsman_priv_ip}"
     public_ip_address_id          = "${var.pub_ip_id_opsman_vm}"
   }
 }
@@ -38,7 +38,6 @@ resource "azurerm_virtual_machine" "ops_manager_vm" {
   os_profile {
     computer_name  = "${var.env_name}-ops-manager"
     admin_username = "${var.vm_admin_username}"
-    admin_password = "${var.vm_admin_password}"
   }
 
   os_profile_linux_config {

@@ -14,8 +14,8 @@ if [[ $opsman_available == "available" ]]; then
   om-linux \
     --target https://$OPSMAN_DOMAIN_OR_IP_ADDRESS \
     --skip-ssl-validation \
-    --username $OPSMAN_USERNAME \
-    --password $OPSMAN_PASSWORD \
+    --username "$OPSMAN_USERNAME" \
+    --password "$OPSMAN_PASSWORD" \
     delete-installation
 fi
 
@@ -50,6 +50,8 @@ for attempt in $(seq 60); do
   fi
 done
 
+terraform init pcf-pipelines/install-pcf/gcp/terraform
+
 echo "Deleting provisioned infrastructure..."
 terraform destroy -force \
   -state $root/terraform-state/*.tfstate \
@@ -62,6 +64,8 @@ terraform destroy -force \
   -var "prefix=dontcare" \
   -var "pcf_opsman_image_name=dontcare" \
   -var "pcf_ert_domain=dontcare" \
+  -var "system_domain=dontcare" \
+  -var "apps_domain=dontcare" \
   -var "pcf_ert_ssl_cert=dontcare" \
   -var "pcf_ert_ssl_key=dontcare" \
   -var "opsman_allow_cidr=dontcare" \

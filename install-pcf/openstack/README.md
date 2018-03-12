@@ -8,7 +8,7 @@ architecture](http://docs.pivotal.io/pivotalcf/1-10/refarch/openstack/openstack_
 
 ## Usage
 
-This pipeline downloads artifacts from DockerHub (czero/cflinuxfs2 and custom
+This pipeline downloads artifacts from DockerHub (czero/rootfs and custom
 docker-image resources) and Pivotal Network, and as such the Concourse instance
 must have access to those.
 
@@ -18,15 +18,15 @@ must have access to those.
 2. Update params.yml and replace all #CHANGEME values with the relevant information.
 
     - The sample pipeline params file includes 2 params that set the major/minor versions of
-      OpsMan and ERT that will be pulled. They will typically default to the latest RC/GA available tiles.
+      OpsMan and ERT that will be pulled. They will typically default to the latest available tiles.
       ```
-      opsman_major_minor_version: '1\.12\..*'
-      ert_major_minor_version: '1\.12\..*'
+      opsman_major_minor_version: 2\.[0-9\]+\.[0-9]+$
+      ert_major_minor_version: 2\.[0-9\]+\.[0-9]+$
       ```
 
     - NOTE: The pipeline also utilizes an s3 compatible bucket for terraform state.
 
-3. [Set the pipeline](http://concourse.ci/single-page.html#fly-set-pipeline), using your updated params.yml:
+3. [Set the pipeline](http://concourse-ci.org/single-page.html#fly-set-pipeline), using your updated params.yml:
 
     ```
     fly -t lite set-pipeline -p deploy-pcf -c pipeline.yml -l params.yml

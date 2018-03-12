@@ -11,14 +11,14 @@ function delete-opsman-installation() {
     om-linux \
       --target "https://${OPSMAN_DOMAIN_OR_IP_ADDRESS}" \
       --skip-ssl-validation \
-      --username ${OPSMAN_USERNAME} \
-      --password ${OPSMAN_PASSWORD} \
+      --username "${OPSMAN_USERNAME}" \
+      --password "${OPSMAN_PASSWORD}" \
       delete-installation
   fi
 }
 
 function delete-opsman() {
-  az login --service-principal -u $AZURE_SERVICE_PRINCIPAL_ID -p $AZURE_SERVICE_PRINCIPAL_PASSWORD --tenant $AZURE_TENANT_ID
+  az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
   local opsman_vms=$(az vm list -g $AZURE_TERRAFORM_PREFIX | jq -r ".[].name | select(. |startswith(\"$AZURE_TERRAFORM_PREFIX-ops-manager\"))")
 
   for om_vm_name in $opsman_vms; do
@@ -32,10 +32,12 @@ function delete-infrastructure() {
   echo "Executing Terraform Destroy ...."
   echo "=============================================================================================="
 
+  terraform init "pcf-pipelines/install-pcf/azure/terraform/${AZURE_PCF_TERRAFORM_TEMPLATE}"
+
   terraform destroy -force \
     -var "subscription_id=${AZURE_SUBSCRIPTION_ID}" \
-    -var "client_id=${AZURE_SERVICE_PRINCIPAL_ID}" \
-    -var "client_secret=${AZURE_SERVICE_PRINCIPAL_PASSWORD}" \
+    -var "client_id=${AZURE_CLIENT_ID}" \
+    -var "client_secret=${AZURE_CLIENT_SECRET}" \
     -var "tenant_id=${AZURE_TENANT_ID}" \
     -var "location=dontcare" \
     -var "env_name=dontcare" \
@@ -47,6 +49,8 @@ function delete-infrastructure() {
     -var "azure_terraform_subnet_dynamic_services_cidr=dontcare" \
     -var "ert_subnet_id=dontcare" \
     -var "pcf_ert_domain=dontcare" \
+    -var "system_domain=dontcare" \
+    -var "apps_domain=dontcare" \
     -var "pub_ip_pcf_lb=dontcare" \
     -var "pub_ip_id_pcf_lb=dontcare" \
     -var "pub_ip_tcp_lb=dontcare" \
@@ -61,11 +65,10 @@ function delete-infrastructure() {
     -var "subnet_infra_id=dontcare" \
     -var "ops_manager_image_uri=dontcare" \
     -var "vm_admin_username=dontcare" \
-    -var "vm_admin_password=dontcare" \
     -var "vm_admin_public_key=dontcare" \
     -var "azure_multi_resgroup_network=dontcare" \
     -var "azure_multi_resgroup_pcf=dontcare" \
-    -var "priv_ip_opsman_vm=dontcare" \
+    -var "azure_opsman_priv_ip=dontcare" \
     -var "azure_account_name=dontcare" \
     -var "azure_buildpacks_container=dontcare" \
     -var "azure_droplets_container=dontcare" \
